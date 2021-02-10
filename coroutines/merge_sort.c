@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define SIZE 10000
+
 
 void bubble_sort(int *A, int size)
 {
@@ -20,14 +20,12 @@ void bubble_sort(int *A, int size)
     }
 }
 
-void merge(int *A, int mid, int l,int r){
-    int start, final, j;
+void merge(int *A, int l, int mid, int r){
+
     int massize = r-l+1;
     if(massize <=1){
         massize = 3;
     }
-    start = l;
-    final = mid+1;
 
     int *temparray = malloc(massize * sizeof(int));
 
@@ -59,14 +57,46 @@ void merge_sort(int *A,int l, int r){
         int mid = (l+r)/2;
         merge_sort(A,l, mid);
         merge_sort(A, mid+1, r);
-        merge(A,mid,l,r);
+        merge(A,l,mid,r);
     }
 }
 
 
-void merge_files(int **Array){
+void merge_files(int **Array,int *size_arrays,int len_size_arrays){
+
     FILE *file;
     file = fopen("result.txt", "w");
+
+
+    size_t result_size=0;
+    int arrays_index[len_size_arrays];
+
+    for(int i=0;i<len_size_arrays;i++){
+        result_size+=size_arrays[i];
+        arrays_index[i] = 0;
+    }
+    int *result_array = (int *) malloc(sizeof(int *)* result_size);
+
+    int index = 0;
+    for(int i=0; i < len_size_arrays; i++){
+        for(int j=0;j < size_arrays[i]; j++){
+            result_array[index] = Array[i][j];
+            index++;
+        }
+    }
+
+    int mid=0, right=size_arrays[0];
+    for(int i=0; i< len_size_arrays-1;i++){
+        mid+=size_arrays[i];
+        right+= size_arrays[i+1];
+        merge(result_array,0,mid-1,right-1);
+    }
+
+    for(int i=0; i < result_size; i++){
+        fprintf(file,"%d ",result_array[i]);
+    }
+    free(result_array);
+    fclose(file);
 
 }
 
@@ -77,121 +107,66 @@ void sort_files(int argc,char *argv[]){
         exit(1);
     }
 
+    int num_files = argc-1;
     int **array;
+    int size_arrays[num_files];
+    FILE *fdarr[num_files];
 
-    array = (int **)malloc(sizeof(int*) * 20);
-
-    for(int i =0; i < 20; i++){
-        array[i] =(int *) malloc(20000*sizeof(int*));
-    }
-
-    FILE *fdarr[argc];
-
-    for(int i =0 ; i< argc-1; i++){
+    for(int i=0; i < num_files;i++){
+        /*открываю файл*/
         if((fdarr[i]= fopen(argv[i+1], "r")) == NULL){
             perror("FILE");
             exit(1);
         }
-
-        int num;
-
-        for(int j=0;fscanf(fdarr[i], "%d", &num)!= EOF;j++){
-            array[i][j] = num;
+        /*считаю количество элементов*/
+        int number;
+        for(int j=0; fscanf(fdarr[i],"%d",&number)!=EOF; j++){
+            size_arrays[i] = j;
         }
-        merge_sort(array[i],0,SIZE-1);
-
-
-
-
-        fclose(fdarr[i]);
-
-
-
-        if((fdarr[i]= fopen(argv[i+1], "w")) == NULL ){
-            perror("FILE2");
-            exit(1);
-        }
+        /*смещаю офсет в начало*/
         if(fseek(fdarr[i],0,SEEK_SET)!= 0){
             perror("fseeek");
             exit(1);
         }
+    }
+    /*выделяю память под все файлы*/
+    array = (int **)malloc(sizeof(int*) *num_files);
+    for(int i =0; i < num_files; i++){
+        array[i] =(int *) malloc(size_arrays[i]*sizeof(int*));
+    }
 
+    /*сортирую каждый файл отдельно*/
+    for(int i =0 ; i< num_files; i++){
 
+        int num;
+        /*закидываю содержимое файла в массив*/
+        for(int j=0;fscanf(fdarr[i], "%d", &num)!= EOF;j++){
+            array[i][j] = num;
+        }
+        /*сортировка массива*/
+        merge_sort(array[i],0,size_arrays[i]-1);
 
-
-        for(int j=0; j < SIZE; j++){
+        /*закрытие фала и последующее открытие с опцией w для перезаписи*/
+        fclose(fdarr[i]);
+        if((fdarr[i]= fopen(argv[i+1], "w")) == NULL ){
+            perror("FILE2");
+            exit(1);
+        }
+        /*запись в файл*/
+        for(int j=0; j < size_arrays[i]; j++){
             fprintf(fdarr[i], "%d ", array[i][j]);
         }
-
+        /*закрытие файлов*/
         fclose(fdarr[i]);
+        //free(array[i]);
+    }
+    merge_files(array, size_arrays,num_files);
+    /*освобождение памяти*/
+    for(int i=0; i<num_files;i++){
         free(array[i]);
     }
-
-
+    free(array);
 }
-
-void temp_sort_files(int argc,char *argv[]){
-
-    if(argc < 2){
-        perror("input files");
-        exit(1);
-    }
-    int **array;
-
-    array = malloc(argc* sizeof(int));
-    for(int i =0; i < argc-1; i++){
-        array[i] = malloc(SIZE*sizeof(int));
-    }
-
-    FILE *fdarr[argc];
-
-
-    if((fdarr[1]= fopen(argv[1], "r")) == NULL){
-        perror("FILE");
-        exit(1);
-    }
-    int num;
-
-    for(int j=0;fscanf(fdarr[1], "%d", &num)!= EOF;j++){
-        array[1][j] = num;
-    }
-
-    merge_sort(array[1],0,SIZE-1);
-
-
-    fclose(fdarr[1]);
-
-    if((fdarr[1]= fopen(argv[1], "w")) == NULL){
-        perror("FILE");
-        exit(1);
-    }
-
-    if(fseek(fdarr[1],0,SEEK_SET)!= 0){
-            perror("fseeek");
-            exit(1);
-        }
-
-    for(int j=0; j <SIZE; j++){
-            fprintf(fdarr[1], "%d ", array[1][j]);
-        }
-
-
-    for(int i =0; i < SIZE-1; i++){
-        printf("%d ", array[1][i]);
-        if (array[1][i] > array[1][i+1]){
-            puts("ERROR");
-            exit(1);
-        }
-    }
-
-
-        fclose(fdarr[1]);
-
-
-
-
-}
-
 
 int main(int argc, char *argv[]) {
 
