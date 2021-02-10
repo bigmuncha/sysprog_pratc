@@ -79,10 +79,10 @@ void sort_files(int argc,char *argv[]){
 
     int **array;
 
-    array = (int **)malloc(sizeof(int*) * (argc+1));
+    array = (int **)malloc(sizeof(int*) * 20);
 
-    for(int i =0; i < argc+1; i++){
-        array[i] =(int *) malloc(SIZE*sizeof(int*));
+    for(int i =0; i < 20; i++){
+        array[i] =(int *) malloc(20000*sizeof(int*));
     }
 
     FILE *fdarr[argc];
@@ -98,9 +98,6 @@ void sort_files(int argc,char *argv[]){
         for(int j=0;fscanf(fdarr[i], "%d", &num)!= EOF;j++){
             array[i][j] = num;
         }
-
-
-
         merge_sort(array[i],0,SIZE-1);
 
 
@@ -127,7 +124,7 @@ void sort_files(int argc,char *argv[]){
         }
 
         fclose(fdarr[i]);
-        //free(array[i]);
+        free(array[i]);
     }
 
 
