@@ -6,7 +6,7 @@
 #include <fcntl.h>
 
 
-
+/*временная функция*/
 void bubble_sort(int *A, int size)
 {
     for(int i = 0; i < size -1; i++){
@@ -20,8 +20,8 @@ void bubble_sort(int *A, int size)
     }
 }
 
+/*обычное слияние*/
 void merge(int *A, int l, int mid, int r){
-
     int massize = r-l+1;
     if(massize <=1){
         massize = 3;
@@ -49,9 +49,8 @@ void merge(int *A, int l, int mid, int r){
         A[f] = temparray[i];
     }
     free(temparray);
-
 }
-
+/*сортировка слиянием кормен стайл*/
 void merge_sort(int *A,int l, int r){
     if(l < r){
         int mid = (l+r)/2;
@@ -61,37 +60,37 @@ void merge_sort(int *A,int l, int r){
     }
 }
 
-
+/*слияние отсортированных файлов в ресулт.тхт*/
 void merge_files(int **Array,int *size_arrays,int len_size_arrays){
 
     FILE *file;
     file = fopen("result.txt", "w");
 
-
     size_t result_size=0;
-    int arrays_index[len_size_arrays];
 
+    /*вычисление конечного размера */
     for(int i=0;i<len_size_arrays;i++){
         result_size+=size_arrays[i];
-        arrays_index[i] = 0;
     }
     int *result_array = (int *) malloc(sizeof(int *)* result_size);
 
-    int index = 0;
-    for(int i=0; i < len_size_arrays; i++){
+
+    /*заполение массива отсортированными массивами*/
+    for(int i=0, index =0; i < len_size_arrays; i++){
         for(int j=0;j < size_arrays[i]; j++){
             result_array[index] = Array[i][j];
             index++;
         }
     }
 
+    /*cлияние отсортированных массивов в нормальный отсортированный массив*/
     int mid=0, right=size_arrays[0];
     for(int i=0; i< len_size_arrays-1;i++){
         mid+=size_arrays[i];
         right+= size_arrays[i+1];
         merge(result_array,0,mid-1,right-1);
     }
-
+    /*запись результата*/
     for(int i=0; i < result_size; i++){
         fprintf(file,"%d ",result_array[i]);
     }
